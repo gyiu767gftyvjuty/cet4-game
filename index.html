@@ -1822,33 +1822,6 @@ function getBestVoices() {
 window.speechSynthesis.onvoiceschanged = () => { bestVoices = {}; getBestVoices(); };
 getBestVoices();
 
-function speakWord(word) {
-  if (!word) return;
-  if (speaking) { stopAllSpeech(); }
-
-  // Try local MP3 first (from Youdao dictionary)
-  const mp3Path = './cet4_audio/' + encodeURIComponent(word) + '.mp3';
-
-  speaking = true;
-  document.querySelectorAll('.mascot').forEach(b => b.classList.add('speaking'));
-
-  audioWord = new Audio();
-  audioWord.src = mp3Path;
-  audioWord.onended = () => { speaking = false; document.querySelectorAll('.mascot.speaking').forEach(b => b.classList.remove('speaking')); audioWord = null; };
-  audioWord.onerror = () => {
-    // Fallback to TTS
-    audioWord = null;
-    const u = new SpeechSynthesisUtterance(word);
-    u.lang = 'en-US';
-    u.rate = 0.75; u.pitch = 1.05; u.volume = 1;
-    if (bestVoices.word) u.voice = bestVoices.word;
-    u.onend = () => { speaking = false; document.querySelectorAll('.mascot.speaking').forEach(b => b.classList.remove('speaking')); };
-    u.onerror = () => { speaking = false; document.querySelectorAll('.mascot.speaking').forEach(b => b.classList.remove('speaking')); };
-    window.speechSynthesis.speak(u);
-  };
-  audioWord.play();
-}
-
 function stopAllSpeech() {
   if (audioWord) {
     audioWord.onended = null;
@@ -1858,6 +1831,48 @@ function stopAllSpeech() {
     audioWord = null;
   }
   window.speechSynthesis.cancel();
+  speaking = false;
+  clearSpeakingUI();
+}
+
+function clearSpeakingUI() {
+  document.querySelectorAll('.mascot.speaking').forEach(b => b.classList.remove('speaking'));
+}
+
+function speakWord(word) {
+  if (!word) return;
+  stopAllSpeech();
+
+  const mp3Path = './cet4_audio/' + encodeURIComponent(word) + '.mp3';
+
+  speaking = true;
+  document.querySelectorAll('.mascot').forEach(b => b.classList.add('speaking'));
+
+  // 安全超时：5秒后强制重置，防止卡住
+  const safetyTimer = setTimeout(() => {
+    if (speaking) { stopAllSpeech(); }
+  }, 5000);
+
+  audioWord = new Audio();
+  audioWord.src = mp3Path;
+  audioWord.onended = () => { clearTimeout(safetyTimer); speaking = false; clearSpeakingUI(); audioWord = null; };
+  audioWord.onerror = () => {
+    clearTimeout(safetyTimer);
+    audioWord = null;
+    // 回退到TTS
+    if (!window.speechSynthesis) { speaking = false; clearSpeakingUI(); return; }
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'en-US'; u.rate = 0.75; u.pitch = 1.05; u.volume = 1;
+    if (bestVoices.word) u.voice = bestVoices.word;
+    u.onend = () => { speaking = false; clearSpeakingUI(); };
+    u.onerror = () => { speaking = false; clearSpeakingUI(); };
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  };
+  audioWord.play().catch(() => {
+    // 浏览器阻止自动播放，触发error回退
+    if (audioWord) audioWord.onerror(new Event('error'));
+  });
 }
 
 function speakSentence(word, htmlStr) {
