@@ -319,29 +319,45 @@ header .subtitle {
 }
 .flashcard {
   width: 100%;
-  min-height: 280px;
-  background-color: #FFF8E7;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(139,105,20,0.03) 4px, rgba(139,105,20,0.03) 8px);
-  border: 6px solid var(--wood);
-  border-image: repeating-linear-gradient(45deg, #8B5E3C 0px, #7A5030 3px, #8B5E3C 6px) 6;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
+  height: 280px;
+  position: relative;
+  cursor: pointer;
+}
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 24px 20px 16px;
+  justify-content: center;
+  padding: 32px 24px;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
   text-align: center;
   image-rendering: pixelated;
+  transition: opacity 0.2s;
+  border-radius: 2px;
 }
-.flashcard .word {
+.flashcard-front {
+  background-color: #FFF8E7;
+  border: 6px solid var(--wood);
+  opacity: 1; z-index: 2;
+}
+.flashcard-back {
+  background-color: #E8F0D8;
+  border: 6px solid #7CA858;
+  opacity: 0; z-index: 1;
+}
+.flashcard.flipped .flashcard-front { opacity: 0; z-index: 1; pointer-events: none; }
+.flashcard.flipped .flashcard-back { opacity: 1; z-index: 2; }
+.flashcard-front .word {
   font-size: 32px;
   font-weight: 700;
   letter-spacing: 2px;
   color: #4A3728;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
 }
-.flashcard .phonetic {
+.flashcard-front .phonetic {
   font-size: 13px;
   color: var(--text-light);
   margin-top: 8px;
@@ -357,21 +373,18 @@ header .subtitle {
   letter-spacing: 2px;
   margin-top: 3px;
 }
-.flashcard .meaning {
-  font-size: 20px;
+.flashcard-back .meaning {
+  font-size: 22px;
   font-weight: 700;
-  color: #5D8C3A;
-  margin: 8px 0 4px;
-  padding-top: 8px;
-  border-top: 1px dashed #C9A96E;
-  width: 100%;
+  color: #3D6B28;
+  margin-bottom: 8px;
 }
-.flashcard .example {
+.flashcard-back .example {
   font-size: 13px;
   color: #5A7A40;
   margin-bottom: 4px;
 }
-.flashcard .example b { color: #3D6B28; }
+.flashcard-back .example b { color: #3D6B28; }
 .mnemonic-tip {
   font-size: 12px;
   color: #D4A843;
@@ -701,11 +714,12 @@ header .subtitle {
 
   /* 翻卡 */
   .flashcard-area { max-width: 100%; }
-  .flashcard { min-height: 240px; padding: 16px 12px; }
-  .flashcard .word { font-size: 24px; word-break: break-all; }
-  .flashcard .phonetic { font-size: 11px; }
-  .flashcard .meaning { font-size: 17px; }
-  .flashcard .example { font-size: 11px; }
+  .flashcard { height: 260px; }
+  .flashcard-front, .flashcard-back { padding: 20px 14px !important; }
+  .flashcard-front .word { font-size: 24px; word-break: break-all; }
+  .flashcard-front .phonetic { font-size: 11px; }
+  .flashcard-back .meaning { font-size: 18px; }
+  .flashcard-back .example { font-size: 11px; }
   .mnemonic-tip { font-size: 10px; }
   .flashcard-actions { flex-wrap: wrap; gap: 6px; }
   .btn { padding: 10px 14px; font-size: 12px; min-height: 44px; }
@@ -1154,17 +1168,22 @@ header .subtitle {
   <div id="mode-flashcard">
     <div class="flashcard-area">
       <div class="flashcard-wrapper">
-        <div class="flashcard" id="flashcard">
-          <div class="word-row">
-            <span class="word" id="fc-word">loading</span>
-            <button class="speaker-btn inline-speaker" style="position:static;margin-left:6px;width:24px;height:24px;font-size:11px" onclick="event.stopPropagation();speakWord(currentFlashcardWord())">▶</button>
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="flashcard-front">
+            <div class="word-row">
+              <span class="word" id="fc-word">loading</span>
+            </div>
+            <div class="phonetic" id="fc-phonetic"></div>
+            <div class="freq-stars" id="fc-freq"></div>
+            <div class="hint">点击卡片查看释义</div>
           </div>
-          <div class="phonetic" id="fc-phonetic"></div>
-          <div class="freq-stars" id="fc-freq"></div>
-          <div class="meaning" id="fc-meaning"></div>
-          <div class="example" id="fc-example"></div>
-          <div class="mnemonic-tip" id="fc-mnemonic"></div>
+          <div class="flashcard-back">
+            <div class="meaning" id="fc-meaning"></div>
+            <div class="example" id="fc-example"></div>
+            <div class="mnemonic-tip" id="fc-mnemonic"></div>
+          </div>
         </div>
+        <div class="mascot" id="fc-mascot" onclick="event.stopPropagation();smartSpeakFlashcard()" title="点我听发音"><div class="mascot-body"><div class="mascot-wing left"></div><div class="mascot-wing right"></div><div class="mascot-eyes"><div class="mascot-eye"></div><div class="mascot-eye"></div></div><div class="mascot-beak"></div></div><div class="mascot-feet"><div class="mascot-foot"></div><div class="mascot-foot"></div></div></div>
       </div>
       <div class="flashcard-actions">
         <button class="btn btn-know" onclick="markMomo(3)">[OK] 认识</button>
@@ -2245,6 +2264,7 @@ function showFlashcard() {
       document.getElementById('fc-example').textContent = '明天继续，或去选择题/游戏模式巩固';
     }
     document.getElementById('fc-progress').textContent = '';
+    document.getElementById('flashcard').classList.remove('flipped');
     return;
   }
   if (fcWords.length === 0 || fcIndex >= fcWords.length) {
@@ -2263,6 +2283,7 @@ function showFlashcard() {
   document.getElementById('fc-example').innerHTML = w.example;
   document.getElementById('fc-mnemonic').textContent = w.mnemonic ? '💡 ' + w.mnemonic : '';
   document.getElementById('fc-progress').textContent = `第 ${fcIndex + 1} / ${fcWords.length} 个`;
+  document.getElementById('flashcard').classList.remove('flipped');
 }
 
 function flipCard() {
