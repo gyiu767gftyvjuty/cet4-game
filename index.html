@@ -1851,10 +1851,10 @@ function speakWord(word) {
   speaking = true;
   document.querySelectorAll('.mascot').forEach(b => b.classList.add('speaking'));
 
-  // 安全超时：5秒后强制重置，防止卡住
+  // 安全超时：3秒后强制重置，防止卡住
   const safetyTimer = setTimeout(() => {
     if (speaking) { stopAllSpeech(); }
-  }, 5000);
+  }, 3000);
 
   audioWord = new Audio();
   audioWord.src = mp3Path;
