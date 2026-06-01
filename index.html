@@ -2962,6 +2962,27 @@ window.addEventListener('keyup', e => {
   }
 });
 
+// 手机触屏控制：手指滑动史莱姆跟着走
+(function() {
+  const canvas = document.getElementById('catch-canvas');
+  let touchActive = false;
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    touchActive = true;
+    const rect = canvas.getBoundingClientRect();
+    const tx = e.touches[0].clientX - rect.left;
+    slimeX = (tx / rect.width) * canvas.width;
+  }, {passive: false});
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (!touchActive) return;
+    const rect = canvas.getBoundingClientRect();
+    const tx = e.touches[0].clientX - rect.left;
+    slimeX = (tx / rect.width) * canvas.width;
+  }, {passive: false});
+  canvas.addEventListener('touchend', function() { touchActive = false; });
+})();
+
 // ============ PK 对战 ============
 let pkPlayerScore = 0, pkSlimeScore = 0, pkTarget = null, pkActive = false;
 let pkSlimeTimer = null, pkAnswered = false, pkRound = 0, pkTotalRounds = 10;
