@@ -1178,7 +1178,7 @@ header .subtitle {
             <span class="word" id="fc-word">loading</span>
           </div>
           <div class="phonetic" id="fc-phonetic"></div>
-          <div class="freq-stars" id="fc-freq"></div>
+          <div class="freq-stars" id="fc-freq"><span id="fc-level" style="font-size:10px;color:#8B5E3C;margin-left:8px"></span></div>
           <div class="hint">👆 点击翻转查看释义</div>
         </div>
         <div class="flashcard-back">
@@ -1190,8 +1190,9 @@ header .subtitle {
       <div class="mascot" id="fc-mascot" onclick="event.stopPropagation();smartSpeakFlashcard()" title="点我听发音"><div class="mascot-body"><div class="mascot-wing left"></div><div class="mascot-wing right"></div><div class="mascot-eyes"><div class="mascot-eye"></div><div class="mascot-eye"></div></div><div class="mascot-beak"></div></div><div class="mascot-feet"><div class="mascot-foot"></div><div class="mascot-foot"></div></div></div>
       </div>
       <div class="flashcard-actions">
-        <button class="btn btn-know" onclick="markKnown()">[OK] 记住了</button>
-        <button class="btn btn-review" onclick="markReview()">[~] 再复习</button>
+        <button class="btn btn-know" onclick="markMomo(3)">[OK] 认识</button>
+        <button class="btn btn-review" onclick="markMomo(2)">[~] 模糊</button>
+        <button class="btn btn-next" style="background:#F0D0C0;color:#A05030;border-color:#A05030" onclick="markMomo(1)">[x] 忘记</button>
         <button class="btn btn-next" onclick="prevCard()">&lt; 上一个</button>
         <button class="btn btn-next" onclick="nextCard()">下一个 &gt;</button>
       </div>
@@ -1766,9 +1767,12 @@ function getWordBank() {
     const studiedSet = new Set(state.todayStudied || []);
     const newWords = all.filter(w => !knownSet.has(w.word) && !studiedSet.has(w.word));
     const reviewWords = state.review.filter(w => !studiedSet.has(w.word));
-    const reviewWordSet = new Set(reviewWords.map(w => w.word));
-    const todayNew = newWords.filter(w => !reviewWordSet.has(w.word)).slice(0, dailyGoal);
-    return [...reviewWords, ...todayNew];
+    // 墨墨系统今日待复习词
+    const momoDue = getMomoDueWords().filter(w => !studiedSet.has(w.word));
+    const allDue = [...reviewWords, ...momoDue];
+    const dueWordSet = new Set(allDue.map(w => w.word));
+    const todayNew = newWords.filter(w => !dueWordSet.has(w.word)).slice(0, dailyGoal);
+    return [...allDue, ...todayNew];
   }
   return all.filter(w => (w.group || 1) === currentGroup || (w.group || 1) === 99);
 }
@@ -2265,6 +2269,10 @@ function showFlashcard() {
   document.getElementById('fc-word').textContent = w.word;
   document.getElementById('fc-phonetic').textContent = w.phonetic;
   document.getElementById('fc-freq').textContent = '★'.repeat(w.freq || 1);
+  // 显示记忆等级
+  const momoInfo = state.momo && state.momo[w.word];
+  const levelHint = momoInfo ? ['','忘记','模糊','认识'][momoInfo.level] + '·第'+(momoInfo.count||0)+'次' : '';
+  document.getElementById('fc-level').textContent = levelHint;
   document.getElementById('fc-meaning').textContent = w.meaning;
   document.getElementById('fc-example').innerHTML = w.example;
   document.getElementById('fc-mnemonic').textContent = w.mnemonic ? '💡 ' + w.mnemonic : '';
@@ -2276,27 +2284,48 @@ function flipCard() {
   document.getElementById('flashcard').classList.toggle('flipped');
 }
 
-function markKnown() {
+// 墨墨式三档记忆系统
+// level 3=认识(3d->7d->30d) 2=模糊(1d后复习) 1=忘记(今天再复习)
+function markMomo(level) {
   if (fcWords.length === 0) return;
   const w = fcWords[fcIndex];
-  state.known[w.word] = (state.known[w.word] || 0) + 1;
+  if (!state.momo) state.momo = {};
+
+  const prev = state.momo[w.word] || { level: 0, count: 0 };
+  const now = Date.now();
+
+  if (level === 3) { // 认识
+    const intervals = [0, 3, 7, 30]; // 第N次认识后的天数
+    const days = intervals[Math.min(prev.count, intervals.length - 1)];
+    state.momo[w.word] = { level: 3, count: prev.count + 1, nextReview: now + days * 86400000 };
+  } else if (level === 2) { // 模糊
+    state.momo[w.word] = { level: 2, count: prev.count, nextReview: now + 86400000 };
+  } else { // 忘记
+    state.momo[w.word] = { level: 1, count: 0, nextReview: now };
+  }
+
+  // 从旧review列表移除
   state.review = state.review.filter(r => r.word !== w.word);
+  // 统计已知（认识且review数>=2）
+  if (level === 3 && state.momo[w.word].count >= 2) {
+    state.known[w.word] = (state.known[w.word] || 0) + 1;
+  }
+
   markWordStudied(w.word);
   saveState(state);
   updateStats();
   nextCard();
 }
 
-function markReview() {
-  if (fcWords.length === 0) return;
-  const w = fcWords[fcIndex];
-  if (!state.review.find(r => r.word === w.word)) {
-    state.review.push(w);
-  }
-  markWordStudied(w.word);
-  saveState(state);
-  updateStats();
-  nextCard();
+// 获取今日待复习的单词（墨墨系统）
+function getMomoDueWords() {
+  if (!state.momo) return [];
+  const now = Date.now();
+  const all = [...builtInWords, ...loadCustomWords()];
+  return all.filter(w => {
+    const m = state.momo[w.word];
+    return m && m.nextReview && m.nextReview <= now;
+  });
 }
 
 function nextCard() {
