@@ -335,21 +335,20 @@ header .subtitle {
   box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
   text-align: center;
   image-rendering: pixelated;
-  transition: opacity 0.2s;
-  border-radius: 2px;
+  transition: none;
 }
 .flashcard-front {
   background-color: #FFF8E7;
   border: 6px solid var(--wood);
-  opacity: 1; z-index: 2;
+  display: flex; z-index: 2;
 }
 .flashcard-back {
   background-color: #E8F0D8;
   border: 6px solid #7CA858;
-  opacity: 0; z-index: 1;
+  display: none; z-index: 1;
 }
-.flashcard.flipped .flashcard-front { opacity: 0; z-index: 1; pointer-events: none; }
-.flashcard.flipped .flashcard-back { opacity: 1; z-index: 2; }
+.flashcard.flipped .flashcard-front { display: none; }
+.flashcard.flipped .flashcard-back { display: flex; }
 .flashcard-front .word {
   font-size: 32px;
   font-weight: 700;
