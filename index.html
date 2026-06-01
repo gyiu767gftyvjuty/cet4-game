@@ -2273,11 +2273,10 @@ function showFlashcard() {
   const w = fcWords[fcIndex];
   document.getElementById('fc-word').textContent = w.word;
   document.getElementById('fc-phonetic').textContent = w.phonetic;
-  document.getElementById('fc-freq').textContent = '★'.repeat(w.freq || 1);
-  // 显示记忆等级
+  const freqStars = '★'.repeat(w.freq || 1);
   const momoInfo = state.momo && state.momo[w.word];
-  const levelHint = momoInfo ? ['','忘记','模糊','认识'][momoInfo.level] + '·第'+(momoInfo.count||0)+'次' : '';
-  document.getElementById('fc-level').textContent = levelHint;
+  const levelHint = momoInfo ? ' [' + ['','忘记','模糊','认识'][momoInfo.level] + '·第'+(momoInfo.count||0)+'次]' : '';
+  document.getElementById('fc-freq').textContent = freqStars + levelHint;
   document.getElementById('fc-meaning').textContent = w.meaning;
   document.getElementById('fc-example').innerHTML = w.example;
   document.getElementById('fc-mnemonic').textContent = w.mnemonic ? '💡 ' + w.mnemonic : '';
