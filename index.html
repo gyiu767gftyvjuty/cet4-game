@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="四级词汇">
@@ -332,6 +332,7 @@ header .subtitle {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -708,23 +709,22 @@ header .subtitle {
   .header-actions { position: static; text-align: center; margin-top: 6px; }
 
   /* 统计栏 */
-  .stats-bar { gap: 8px; padding: 8px 6px; font-size: 10px; flex-wrap: wrap; }
-  .stats-bar strong { font-size: 12px; }
-  .stats-bar::before, .stats-bar::after { width: 5px; height: 5px; top: -1px; }
+  .stats-bar { gap: 6px; padding: 8px 4px; font-size: 11px; flex-wrap: wrap; }
+  .stats-bar strong { font-size: 13px; }
 
   /* 分组栏 */
   .group-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
-  .group-btn { padding: 4px 6px; font-size: 10px; margin-left: 0; }
+  .group-btn { padding: 6px 8px; font-size: 11px; margin-left: 0; min-height: 40px; }
 
   /* 标签页 */
   .tabs { flex-wrap: wrap; padding: 2px; }
-  .tab { flex: 1 0 auto; padding: 8px 4px; font-size: 11px; min-width: 50px; margin: 1px; }
+  .tab { flex: 1 0 auto; padding: 10px 5px; font-size: 11px; min-width: 48px; margin: 1px; }
 
   /* 翻卡 */
   .flashcard-area { max-width: 100%; }
   .flashcard { height: 280px; }
   .flashcard-front, .flashcard-back { padding: 20px 16px !important; }
-  .flashcard-front .word { font-size: 26px; }
+  .flashcard-front .word { font-size: 26px; word-break: break-all; }
   .flashcard-front .phonetic { font-size: 12px; }
   .flashcard-back .meaning { font-size: 20px; }
   .flashcard-back .example { font-size: 12px; }
@@ -738,12 +738,12 @@ header .subtitle {
 
   /* 连连看 */
   .match-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
-  .match-card { font-size: 10px; padding: 3px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .match-card { font-size: 11px; padding: 4px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 
   /* 接单词 */
   #catch-canvas { max-width: 100%; height: auto; }
   .catch-hud { font-size: 11px; gap: 8px; }
-  .catch-hint { font-size: 10px; }
+  .catch-hint { font-size: 11px; }
 
   /* PK 对战 - 竖排布局 */
   .pk-arena { flex-direction: column; align-items: center; gap: 8px; padding: 10px; min-height: auto; }
@@ -757,27 +757,30 @@ header .subtitle {
   .sheep-layout { flex-direction: column; }
   .sheep-slime-side { width: 100%; flex-direction: row; justify-content: center; gap: 8px; padding-top: 8px; }
   .sheep-board { gap: 3px; padding: 6px; }
-  .sheep-card { font-size: 11px; padding: 8px 10px; min-width: 40px; }
-  .sheep-slot { width: 36px; height: 28px; font-size: 9px; }
+  .sheep-card { font-size: 12px; padding: 8px 10px; min-width: 40px; min-height: 40px; }
+  .sheep-slot { width: 38px; height: 30px; font-size: 10px; }
 
   /* 弹窗 */
   .modal-card { padding: 20px 16px; max-height: 85vh; }
   .result-card { padding: 24px 16px; }
-  .welcome-card { padding: 20px 14px; }
+  .welcome-card { padding: 20px 12px; }
+  .welcome-speech { font-size: 11px; padding: 6px 10px; }
   .color-opt { width: 28px; height: 28px; }
   .goal-opt { padding: 10px 8px; min-width: 55px; font-size: 11px; }
   .goal-opt .num { font-size: 18px; }
 
   /* 通关总结 */
   .review-word-grid { grid-template-columns: repeat(2, 1fr); gap: 3px; }
-  .review-word-chip { font-size: 10px; padding: 4px 6px; }
+  .review-word-chip { font-size: 11px; padding: 6px 8px; }
 
   /* 表单 */
   .form-row { flex-direction: column; gap: 0; }
   .form-group input, .form-group textarea { font-size: 13px; padding: 8px 10px; }
 
   /* 通用按钮 touch 友好 */
-  button, .btn, .btn-play-again, .btn-primary, .btn-secondary { min-height: 40px; }
+  button, .btn, .btn-play-again, .btn-primary, .btn-secondary { min-height: 44px; }
+  .catch-hud { flex-wrap: wrap; gap: 8px; }
+  .catch-target { font-size: 14px; }
 
   /* 史莱姆略小一点 */
   .mascot { width: 38px; height: 42px; bottom: 4px; right: 4px; }
@@ -1843,7 +1846,7 @@ function speakWord(word) {
   if (!word) return;
   stopAllSpeech();
 
-  const mp3Path = './cet4_audio/' + encodeURIComponent(word) + '.mp3';
+  const mp3Path = './cet4_audio/' + word + '.mp3';
 
   speaking = true;
   document.querySelectorAll('.mascot').forEach(b => b.classList.add('speaking'));
@@ -1888,7 +1891,7 @@ function speakSentence(word, htmlStr) {
   document.querySelectorAll('.mascot').forEach(b => b.classList.add('speaking'));
 
   // Play word MP3 first if available, then TTS the sentence
-  const mp3Path = './cet4_audio/' + encodeURIComponent(word) + '.mp3';
+  const mp3Path = './cet4_audio/' + word + '.mp3';
   audioWord = new Audio();
   audioWord.src = mp3Path;
 
